@@ -1,0 +1,774 @@
+<!-- chat/templates/chat/room.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Chat Room</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+
+    <style>
+    h1 {
+    color:yellow;
+      font-family: verdana;
+      font-size: 300%;
+    }
+    p {
+      color: white;
+      font-family: courier;
+      font-size: 160%;
+    }
+
+    #map {
+        position: relative;
+      height: 100%;
+    }
+
+    /* Optional: Makes the sample page fill the window. */
+    html,
+    body {
+      height: 100%;
+
+      background-color: #2a3b4b;
+    }
+    </style>
+
+</head>
+
+<body >
+
+
+            <!--- Navigation -->
+    <nav class="navbar navbar-dark bg-dark navbar-expand-lg navbar-fixed-top">
+        <div class="container-fluid">
+            <!--Logo-->
+            <a class="navbar-brand">
+                <h3>
+                <em class = "fas fa-map-marked-alt"> GPYES</em>
+                <br>
+
+                </h3>
+            </a>
+            <!--Create collapse button for small nav bar-->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class = "navbar-toggler-icon"></span>
+            </button>
+             <!--What appears in the nav bar-->
+             <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <!--Options-->
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a class="nav-link js-scroll-trigger" href="#map">My Map</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link js-scroll-trigger" href="#chat-log">My Chat</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#myVote">My Vote</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#placesNearby">Places Nearby</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+<!--     <div class="mx-auto">
+        
+            
+
+        
+    </div> -->
+
+    <!-- My Map title-->
+    <div class="container-fluid">
+        <div class="row">
+            <!--THIS IS WHAT WAS CHANGED HERE-->
+            <div id="map-container-google-2" class="map-responsive col-12" style="height: 40vh; margin-top: 1vh">
+                <div id="map"></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-9">
+                <h5 class="border-bottom border-light text-light p-2 text-center">My Location</h5>
+                <p id="locInfo"></p>
+            </div>
+            <div class="col-3">
+                <h5 class="border-bottom border-light text-light p-2 text-center">Controls</h5>
+                <div class="col-12">
+                    <!-- <button onclick="document.querySelector('.custom-map-control-button').click();getLocation()" type="button" class="col-12 btn btn-secondary">Update Location</button> -->
+                    <br>
+                    <button onclick="initMap2()" type="button" class="col-12 btn btn-secondary">Initialize Map</button>
+                    <br>
+                    <button onclick="drawBoundary()" type="button" class="col-12 btn btn-secondary">Zoom In / Zoom Out</button><br><br>
+                </div>
+            </div>
+        </div>  
+
+        <div class="row">
+            <div class="col-12">
+                <textarea class="form-control" id="chat-log" style="border: none; width: 100%; -webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box;" rows="12"></textarea>
+                
+            </div>
+        </div>
+        
+        <div class="row mt-2">
+            <div class="col-12">
+                <input id="chat-message-input" type="text" style="border: none; width: 100%; -webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box;">
+            </div>
+        </div>
+
+
+        <div class="row mt-2">
+            <div class="col-12">
+                <input id="chat-message-submit" type="button" value="Send">
+                <!--CONSIDER DELETING THIS-->
+                {{ room_name|json_script:"room-name" }}
+                <!-- <button onclick="getLocation()">Get GPS Location</button>
+                <p id="">GPS Location:</p>
+                <p id="gpsCoord"></p> -->
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12" align="center">
+                <p id="demo"></p>
+            </div>
+        </div>
+
+
+
+        <div class="row">
+            <div class="col-12">
+            <!--Create Poll here-->
+                <h5 class="border-bottom border-light text-light p-2 text-center" id = "myVote">My Vote</h5>
+
+                <script type="text/javascript">
+                    (function(d,s,id,u){
+                      if (d.getElementById(id)) return;
+                      var js, sjs = d.getElementsByTagName(s)[0],
+                          t = Math.floor(new Date().getTime() / 1000000);
+                      js=d.createElement(s); js.id=id; js.async=1; js.src=u+'?'+t;
+                      sjs.parentNode.insertBefore(js, sjs);
+                    }(document, 'script', 'os-widget-jssdk', 'https://www.opinionstage.com/assets/loader.js'));
+                </script>
+                <div id="os-widget-848706" class="os_poll" data-path="/polls/2747925" data-of="ytultra">
+                </div>
+            </div>
+        </div>
+        
+        <!-- modal -->
+        <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Find Friends</h5>
+
+                    </div>
+                    <div class="modal-body">
+                        <form>
+                            <div class="form-group">
+                                <label for="recipient-name" class="col-form-label">Enter Your Name</label>
+                                <input type="text" class="form-control" id="recipient-name">
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">                    
+                        <button id="modalConfirmBtn" type="button" class="btn btn-primary">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        
+
+
+        <!-- buttons that update location (plus button) -->
+        <div class="buttons" style="display:none;">
+            <div class="minus button">-</div>
+            <div class="value">?</div>
+            <div class="plus button">+</div>
+        </div>
+
+        <div class="state">
+            <span class="users">?</span> online
+        </div>
+
+        <div style="display:none;">
+            <label>Socket Info</label><br>
+            <p>You Are: <label id="socketInfo">Disconnected</label><br></p>
+            <p>Channel_Name_ID: <label id="channelNameID">Disconnected</label><br></p><br><br>
+        </div>
+
+        <!-- sepearate web socket (WS Server)-->
+        <style type="text/css">
+            body {
+                font-family: "Courier New", sans-serif;
+                text-align: center;
+            }
+            .buttons {
+                font-size: 4em;
+                display: flex;
+                justify-content: center;
+            }
+            .button, .value {
+                line-height: 1;
+                padding: 2rem;
+                margin: 2rem;
+                border: medium solid;
+                min-height: 1em;
+                min-width: 1em;
+            }
+            .button {
+                cursor: pointer;
+                user-select: none;
+            }
+            .minus {
+                color: red;
+            }
+            .plus {
+                color: green;
+            }
+            .value {
+                min-width: 2em;
+            }
+            .state {
+                font-size: 2em;
+            }
+        </style>
+  
+    </div>
+
+
+
+    
+
+    <!-- Chat script - initial Geolocation -->
+    <script>
+        //var x = document.getElementById("gpsCoord");
+        var y = document.getElementById("locInfo");
+        var xCoord
+        var yCoord 
+
+        function getLocation() {
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(displayPosition);
+          } else { 
+            x.innerHTML = "Geolocation is not supported by this browser.";
+          }
+        }
+
+
+
+
+        getLocation()
+
+        
+        function displayPosition(position) {
+            xCoord = position.coords.latitude;
+            yCoord = position.coords.longitude;
+            /*x.innerHTML = "Latitude: " + xCoord + 
+              "<br>Longitude: " + yCoord;*/
+
+            y.innerHTML = "Latitude: " + xCoord + 
+              "<br>Longitude: " + yCoord;  
+            
+        };
+
+    
+
+
+        //JS - Chat and sockets
+  
+
+        
+
+        const roomName = JSON.parse(document.getElementById('room-name').textContent);
+        // code for local testing
+        /*const chatSocket = new WebSocket(
+            'ws://'
+            + window.location.host
+            + '/ws/chat/'
+            + roomName
+            + '/'
+        );*/
+
+        /*const chatSocket = new WebSocket(
+            'ws://'
+            + window.location.host
+            + '/ws/chat/'
+            + roomName
+            + '/'
+        );*/
+
+        const chatSocket = new WebSocket(
+            'wss://frillwit.com/ws/chat/'
+            + roomName
+            + '/'
+        );
+        
+
+        var socketObject = document.getElementById("socketInfo");
+        var channelName_ID = document.getElementById("channelNameID");
+        
+        chatSocket.onmessage = function(e) {
+            ///////////////////////////
+
+            const data = JSON.parse(e.data);
+
+            if(data.socketID){
+                    document.querySelector('#chat-log').value += ('message from - ' + data.socketID + '\n' );
+                    socketObject.textContent = data.socketID;
+                    channelName_ID.textContent = data.userID;
+                    
+                }
+            
+            document.querySelector('#chat-log').value += ('<--- ' + data.socketUser + ' says ---> ' + data.message + '\n');
+            
+        };
+
+        chatSocket.onclose = function(e) {
+            console.error('Chat socket closed unexpectedly');            
+        };
+
+        // focus on load
+        //document.querySelector('#chat-message-input').focus();
+        
+        document.querySelector('#chat-message-input').onkeyup = function(e) {
+            if (e.keyCode === 13) {  // enter, return
+                document.querySelector('#chat-message-submit').click();
+            }
+        };
+
+        document.querySelector('#chat-message-submit').onclick = function(e) {
+            const messageInputDom = document.querySelector('#chat-message-input');
+            const message = messageInputDom.value;
+            chatSocket.send(JSON.stringify({
+                'message': message,
+                'xCoord': xCoord,
+                'yCoord': yCoord,
+                'chatUser': userName,
+            }));
+            messageInputDom.value = '';
+        };
+    </script>
+
+
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    
+    <!-- Modal script -->
+    <script>
+    
+        var userName
+
+        var xCoord
+        var yCoord 
+        var wsConnections = []
+
+
+        $(window).on('load', function(){
+            
+
+            $("#exampleModal").modal({
+                backdrop: 'static',
+                keyboard: false
+            });
+
+
+            $("#exampleModal").modal("show");
+
+            
+
+            //handler click event for modal button
+            $('#modalConfirmBtn').on('click', function(event) {
+                userName = document.getElementById("recipient-name").value;
+                if(userName != undefined){
+                    $("#exampleModal").modal("toggle")
+                }              
+                
+            });
+
+
+            //get coordinates after user enters 
+            $('#exampleModal').on('hidden.bs.modal', function (e) {
+                //alert(userName)
+                initMap2();
+                document.querySelector('.plus').click();
+
+                // do something...
+            })
+
+
+            
+        });  
+
+        //websocket interaction
+        var minus = document.querySelector('.minus'),
+            plus = document.querySelector('.plus'),
+            value = document.querySelector('.value'),
+            users = document.querySelector('.users'),
+            //websocket = new WebSocket("ws://127.0.0.1:6789/");
+            //websocket = new WebSocket("ws://173.230.154.187:6789/");
+            websocket = new WebSocket("wss://frillwit.com:6388/");
+
+        minus.onclick = function (event) {
+            getLocation()
+            websocket.send(JSON.stringify({
+                action: 'minus',
+                'xCoor': xCoord,
+                'yCoor': yCoord,
+            }));
+        }
+        ////////////////////////////////////////////////////////////////////////
+        // plus button creates json of gps coords
+        /*plus.onclick = function (event) {
+            navigator.permissions.query({name:'geolocation'}).then(function(result){
+                if(result.state == 'granted') {
+                    websocket.send(JSON.stringify({
+                        userID_Name: userName,
+                        action: 'plus',
+                        'xCoor': xCoord,
+                        'yCoor': yCoord,
+                    }));
+                    
+                } else {
+                    
+                    // Will return ['granted', 'prompt', 'denied']
+                    alert("Please Allow Location and Reload the Page");
+                }
+            });     
+            
+        }*/
+
+        ////////////////////////////////////////////////////////////////////////
+        plus.onclick = function (event) {
+            if (navigator.geolocation) {  
+                getLocation();                  
+                websocket.send(JSON.stringify({
+                    userID_Name: userName,
+                    action: 'plus',
+                    'xCoor': xCoord,
+                    'yCoor': yCoord,
+                }));                                
+            } else { 
+                alert("Please Allow Location and Reload the Page");
+            }
+        }
+
+
+
+
+
+
+        /*function(result){
+                if(result.state == 'granted') {
+                    websocket.send(JSON.stringify({
+                        userID_Name: userName,
+                        action: 'plus',
+                        'xCoor': xCoord,
+                        'yCoor': yCoord,
+                    }));
+                    
+                } else {
+                    
+                    // Will return ['granted', 'prompt', 'denied']
+                    alert("Please Allow Location and Reload the Page");
+                }
+            }
+
+
+        plus.onclick = function (event) {
+            navigator.permissions.query({name:'geolocation'}).then(function(result){
+                if(result.state == 'granted') {
+                    websocket.send(JSON.stringify({
+                        userID_Name: userName,
+                        action: 'plus',
+                        'xCoor': xCoord,
+                        'yCoor': yCoord,
+                    }));
+                    
+                } else {
+                    
+                    // Will return ['granted', 'prompt', 'denied']
+                    alert("Please Allow Location and Reload the Page");
+                }
+            });     
+            
+        }*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+        websocket.onmessage = function (event) {
+            parsedData = JSON.parse(event.data);
+            websocketObjectsLength = parsedData.websocketObjects.length;
+            //alert(websocketObjectsLength)
+            //this works
+            //for(var i=0; i < websocketObjectsLength; i++){
+                //alert(Object.keys(parsedData.websocketObjects[i]).length)
+                //alert(parsedData.websocketObjects[i].id)
+                /*alert(parsedData.websocketObjects[i].id + " " + JSON.stringify(parsedData.websocketObjects[i].webSocket_Tuple) + " " + JSON.stringify(parsedData.websocketObjects[i].latPos) + " " + JSON.stringify(parsedData.websocketObjects[i].longPos))*/
+                //alert(JSON.stringify(parsedData.websocketObjects[i].latPos))
+                //alert(JSON.stringify(parsedData.websocketObjects[i].longPos))
+                //next - here is where a new marker will be createdfor each websocket   
+            //}
+
+
+            //OLD CODE WORKING
+            //initMap2(parsedData)
+            updateLocationMarkers(parsedData)
+
+
+
+        };
+    </script>
+
+    <div id="map"></div>
+        
+    <script type="text/javascript">
+        let map;
+        var markers = [];  
+        var globalMap = null;
+        
+
+        function initMap2() {
+            
+            //alert("json param is: " + jsonParam.websocketObjects.length)
+
+            
+            globalMap = null;
+            
+            globalMap = new google.maps.Map(document.getElementById("map"), 
+                {
+                zoom: 10,
+                center: new google.maps.LatLng(34.052235, -118.243683),
+                mapTypeId: "terrain",
+                }
+            );
+
+            map = globalMap;
+            // Create a <script> tag and set the USGS URL as the source.
+            const script = document.createElement("script");
+
+            const uluru1 ={ lat:34.1808, lng: -118.3090};
+            const uluru ={ lat:34.0668, lng: -118.1684};
+            const pos2 ={ lat:34.0689, lng: -118.4452 };        
+
+            const testMarker = new google.maps.Marker({
+                position:uluru1,
+                map:globalMap,
+                title: "Click to zoom",
+                label: "Burbank",
+
+            })
+
+            testMarker.addListener("click", () => {
+                map.setZoom(18);
+                map.setCenter(testMarker.getPosition());
+            });
+
+
+
+
+
+            const marker1 = new google.maps.Marker({
+                position: uluru,
+                map: globalMap,
+                title: "Click to zoom",
+                label: "CSULA",
+            })
+            //click event
+            marker1.addListener("click", () => {
+                map.setZoom(18);
+                map.setCenter(marker1.getPosition());
+            });
+
+            const marker2 = new google.maps.Marker({
+                position: pos2,
+                map: globalMap,
+                title: "Click to zoom",
+                label: "Fresh Prince",
+            });
+            //clickevent
+            marker2.addListener("click", () => {
+                map.setZoom(18);
+                map.setCenter(marker2.getPosition());
+            });
+              //This is where the set will be to fit all markers on the map
+            //var markers = [marker,marker1,marker2]; 
+            
+
+            markers.push(testMarker);
+            markers.push(marker1);
+            markers.push(marker2);
+           
+   
+        }
+
+        
+
+
+        function handleLocationError(browserHasGeolocation, infoWindow, pos) {
+            infoWindow.setPosition(pos);
+            infoWindow.setContent(
+                browserHasGeolocation
+                    ? "Error: The Geolocation service failed."
+                    : "Error: Your browser doesn't support geolocation."
+            );
+            infoWindow.open(map);
+        }
+
+        //Function that hard codes the marker onto the global map var
+        // position has already been set in array,
+        //received json array
+        function updateLocationMarkers(jsonParam){
+            //var map = globalMap;
+                       
+            
+            function clearMarkers() {
+                for (var i = 0; i < markers.length; i++ ) {
+                    markers[i].setMap(null);
+                }
+                markers.length = 0;
+            }
+            clearMarkers()
+
+
+
+
+            for(var i=0; i < jsonParam.websocketObjects.length; i++){
+                //check for empty gps values - don't make markers if so
+                if(jsonParam.websocketObjects[i].latPos !== 0 && jsonParam.websocketObjects[i].longPos !== 0){
+                    //alert(Object.keys(parsedData.websocketObjects[i]).length)
+                    //alert(parsedData.websocketObjects[i].id)
+                    //alert("id is " + jsonParam.websocketObjects[i].id + ", tuple is " + JSON.stringify(jsonParam.websocketObjects[i].webSocket_Tuple) + ", lat is " + JSON.stringify(jsonParam.websocketObjects[i].latPos) + ", long is " + JSON.stringify(jsonParam.websocketObjects[i].longPos))
+                    //alert(JSON.stringify(parsedData.websocketObjects[i].latPos))
+                    //alert(JSON.stringify(parsedData.websocketObjects[i].longPos))
+                    //next - here is where a new marker will be createdfor each websocket   
+                    /*var tempPos = {
+                        lat: jsonParam.websocketObjects[i].latPos,
+                        lng: jsonParam.websocketObjects[i].longPos
+                    };*/
+
+
+                    const newMarkerPosition ={ lat:jsonParam.websocketObjects[i].latPos, lng: jsonParam.websocketObjects[i].longPos};
+                    //alert(tempPos)
+                    //alert(marker1)
+
+                    /*var tempMarker = new google.maps.Marker({
+                        //position: tempPos,
+                        position: newMarkerPosition,
+                        map: globalMap,
+                        title: "Click to zoom",
+                        //label: jsonParam.websocketObjects[i].webSocket_Tuple,
+                        label: {
+                            text: jsonParam.websocketObjects[i].userIDName,
+                            fontSize: "30px"
+                        }
+                    })*/
+
+                    const tempMarker = new google.maps.Marker({
+                        //position: tempPos,
+                        position: newMarkerPosition,
+                        map: globalMap,
+                        title: "Click to zoom",
+                        //label: jsonParam.websocketObjects[i].webSocket_Tuple,
+                        label: {
+                            text: jsonParam.websocketObjects[i].userIDName,
+                            fontSize: "30px"
+                        }
+                    })
+
+
+
+                    //click event
+                    tempMarker.addListener("click", () => {
+                        map.setZoom(18);
+                        map.setCenter(tempMarker.getPosition());
+                    });
+
+                    markers.push(tempMarker)
+
+                    //alert(jsonParam.websocketObjects[i].webSocket_Tuple)
+                    // check message contains an initialized tuple containing 0,0 
+                    //for gps data
+                    //alert(jsonParam.websocketObjects[i].webSocket_Tuple.search("0, 0") )
+
+                    
+                    
+                    //alert(jsonParam.websocketObjects[i].latPos === 0 && jsonParam.websocketObjects[i].longPos === 0)
+                }
+            }
+            
+
+
+        }
+
+        function drawBoundary(){
+            //Arraylist of all the markers to be added onto the map
+            var bounds= new google.maps.LatLngBounds();
+            //bounds var collects coordinates of all markers
+            for(var i=0; i<markers.length; i++){
+                bounds.extend(markers[i].getPosition());
+            }
+
+            //fitBounds calculates the coordinates to fit all onto one map
+            map.fitBounds(bounds);
+            const flightPlanCoordinates=[];
+
+            for( var i=0; i<markers.length; i++){
+                flightPlanCoordinates[i] = markers[i].getPosition();
+            }
+
+            //alert(flightPlanCoordinates);
+
+            const flightPath = new google.maps.Polyline({
+                path: flightPlanCoordinates,
+                geodesic: true,
+                strokeColor: "#FF0000",
+                strokeOpacity: 1.0,
+                strokeWeight: 2,
+            });
+            flightPath.setMap(map);
+        }
+    </script>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA25rL320UU0T8pxaNG5bkuBWS2v2Eb0hg" async></script>
+
+        
+
+
+
+
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w==" crossorigin="anonymous" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js" integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0" crossorigin="anonymous"></script>
+
+    <div>
+    <script>
+
+    </script>
+
+    <script>
+        function updateMapInterval() {
+            //alert('Simulating Click');
+            document.querySelector('.plus').click()
+        }
+
+        setInterval(updateMapInterval, 10000);
+    </script>
+
+    </div>
+
+
+</body>
+</html>

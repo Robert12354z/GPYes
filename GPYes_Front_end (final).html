@@ -1,0 +1,473 @@
+<!-- chat/templates/chat/room.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Chat Room</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+
+    <style>
+    h1 {
+    color:yellow;
+      font-family: verdana;
+      font-size: 300%;
+    }
+    p {
+      color: white;
+      font-family: courier;
+      font-size: 160%;
+    }
+
+    #map {
+      height: 100%;
+    }
+
+    /* Optional: Makes the sample page fill the window. */
+    html,
+    body {
+      height: 100%;
+
+      background-color: #2a3b4b;
+    }
+    </style>
+
+</head>
+
+<body>
+
+
+            <!--- Navigation -->
+    <nav class = "navbar navbar-dark bg-dark navbar-expand-lg navbar-fixed-top">
+        <div class = "container-fluid">
+            <!--Logo-->
+            <a class = "navbar-brand">
+                <h3>
+                <em class = "fas fa-map-marked-alt"> GPYES</em>
+                <br>
+
+                </h3>
+            </a>
+            <!--Create collapse button for small nav bar-->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class = "navbar-toggler-icon"></span>
+            </button>
+             <!--What appears in the nav bar-->
+             <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <!--Options-->
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#myMap">My Map</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#myChat">My Chat</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#myVote">My Vote</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#placesNearby">Places Nearby</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="mx-auto">
+        
+            <div id="map-container-google-2" class="map-container" style="height: 500px">
+            <div id="map"></div>
+            </div>
+
+        
+    </div>
+
+    <!-- My Map title-->
+    <div class="container-fluid">
+
+
+
+    
+
+
+
+        <div class="row">
+            <div class="col-9">
+                <h5 id = "myMap" class="border-bottom border-light text-light p-2 text-center">My Location</h5>
+            </div>
+            <div class="col-3">
+                <h5 id = "myMap" class = "border-bottom border-light text-light p-2 text-center">GPS Coordinates</h5>
+            </div>
+        </div>  
+        <div class="row">
+            <div class="col-9" align="center">
+                <p id="demo"></p>
+            </div>
+            <div class="col-3">
+                <div class="row">
+                    <div class="col-12">
+                        <button onclick="document.querySelector('.custom-map-control-button').click();getLocation()" type="button" class="col-12 btn btn-secondary">Update Location</button>
+                    </div>
+                    <div class="col-12">
+                        <br>
+                        <button type="button" class="col-12 btn btn-secondary">Suggest Meetup Location</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+  
+    </div>
+
+
+
+    <div class="buttons">
+        <div class="minus button">-</div>
+        <div class="value">?</div>
+        <div class="plus button">+</div>
+    </div>
+    <div class="state">
+        <span class="users">?</span> online
+    </div>
+
+    <label>Socket Info</label><br>
+    <p>You Are: <label id="socketInfo">Disconnected</label><br></p>
+    <p>Channel_Name_ID: <label id="channelNameID">Disconnected</label><br></p><br><br>
+
+    <textarea id="chat-log" cols="100" rows="20"></textarea><br>
+    <input id="chat-message-input" type="text" size="100"><br>
+    <input id="chat-message-submit" type="button" value="Send">
+    {{ room_name|json_script:"room-name" }}
+
+    <button onclick="getLocation()">Get GPS Location</button>
+    <p id="">GPS Location:</p>
+    <p id="gpsCoord"></p>
+
+    <!-- sepearate web socket (WS Server)-->
+    <style type="text/css">
+        body {
+            font-family: "Courier New", sans-serif;
+            text-align: center;
+        }
+        .buttons {
+            font-size: 4em;
+            display: flex;
+            justify-content: center;
+        }
+        .button, .value {
+            line-height: 1;
+            padding: 2rem;
+            margin: 2rem;
+            border: medium solid;
+            min-height: 1em;
+            min-width: 1em;
+        }
+        .button {
+            cursor: pointer;
+            user-select: none;
+        }
+        .minus {
+            color: red;
+        }
+        .plus {
+            color: green;
+        }
+        .value {
+            min-width: 2em;
+        }
+        .state {
+            font-size: 2em;
+        }
+    </style>
+
+
+    <script>
+    	// custom chatbox button function
+		function getLocation() {
+		  if (navigator.geolocation) {
+		    navigator.geolocation.getCurrentPosition(showPosition);
+		  } else { 
+		    x.innerHTML = "Geolocation is not supported by this browser.";
+		  }
+		}
+
+		getLocation()
+		//set geocoords
+		var xCoord
+    	var yCoord 
+        var wsConnections = []
+
+
+    	//write geolocation on webpage after getting get gps location button pressed
+		function showPosition(position) {
+			xCoord = position.coords.latitude;
+	    	yCoord = position.coords.longitude;
+			x.innerHTML = "Latitude: " + xCoord + 
+			  "<br>Longitude: " + yCoord;	
+		}
+
+
+		//websocket interaction
+        var minus = document.querySelector('.minus'),
+            plus = document.querySelector('.plus'),
+            value = document.querySelector('.value'),
+            users = document.querySelector('.users'),
+            websocket = new WebSocket("ws://127.0.0.1:6789/");
+
+        minus.onclick = function (event) {
+            websocket.send(JSON.stringify({
+            	action: 'minus',
+               	'xCoor': xCoord,
+            	'yCoor': yCoord,
+            }));
+        }
+
+        // plus button creates json of gps coords
+        plus.onclick = function (event) {
+            websocket.send(JSON.stringify({
+            	action: 'plus',
+            	'xCoor': xCoord,
+            	'yCoor': yCoord,
+            }));
+        }
+
+        websocket.onmessage = function (event) {
+            parsedData = JSON.parse(event.data);
+            websocketObjectsLength = parsedData.websocketObjects.length;
+            //alert(websocketObjectsLength)
+
+            for(var i=0; i < websocketObjectsLength; i++){
+                //alert(Object.keys(parsedData.websocketObjects[i]).length)
+                //alert(parsedData.websocketObjects[i].id)
+                alert(parsedData.websocketObjects[i].id + " " + JSON.stringify(parsedData.websocketObjects[i].webSocket_Tuple) + " " + JSON.stringify(parsedData.websocketObjects[i].latPos) + " " + JSON.stringify(parsedData.websocketObjects[i].longPos))
+                //alert(JSON.stringify(parsedData.websocketObjects[i].latPos))
+                //alert(JSON.stringify(parsedData.websocketObjects[i].longPos))
+                //next - here is where a new marker will be createdfor each websocket   
+            }
+        };
+
+    </script>
+
+    <div id="map"></div>
+        
+    <script type="text/javascript">
+        let map;
+
+        function initMap() {
+            map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 10,
+            center: new google.maps.LatLng(34.052235, -118.243683),
+            mapTypeId: "terrain",
+            });
+            // Create a <script> tag and set the USGS URL as the source.
+            const script = document.createElement("script");
+            // This example uses a local copy of the GeoJSON stored at
+            // http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.geojsonp
+            script.src =
+            "https://developers.google.com/maps/documentation/javascript/examples/json/earthquake_GeoJSONP.js";
+            document.getElementsByTagName("head")[0].appendChild(script);
+            infoWindow = new google.maps.InfoWindow();
+            const locationButton = document.createElement("button");
+            locationButton.textContent = "See Your Location";
+            locationButton.classList.add("custom-map-control-button");
+            map.controls[google.maps.ControlPosition.TOP_CENTER].push(locationButton);
+            locationButton.addEventListener("click", () => {
+                // Try HTML5 geolocation.
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const pos = {
+                                lat: position.coords.latitude,
+                                lng: position.coords.longitude,
+                        };
+                        const uluru ={ lat:34.0668, lng: -118.1684};
+                        const pos2 ={ lat:34.0689, lng: -118.4452 };
+
+
+
+
+                        const marker = new google.maps.Marker({
+                            position: pos,
+                            map: map,
+                        })
+                        const marker1 = new google.maps.Marker({
+                            position: uluru,
+                            map: map,
+                        })
+                        const marker2 = new google.maps.Marker({
+                            position: pos2,
+                            map: map,
+                    });
+                      //This is where the set will be to fit all markers on the map
+                    var markers =[marker,marker1,marker2]; 
+                    //Arraylist of all the markers to be added onto the map
+                    var bounds= new google.maps.LatLngBounds();
+                    //bounds var collects coordinates of all markers
+                    for(var i=0; i<markers.length; i++){
+                        bounds.extend(markers[i].getPosition());
+                    }
+
+                    //fitBounds calculates the coordinates to fit all onto one map
+                    map.fitBounds(bounds);
+                    const flightPlanCoordinates=[];
+
+                    for( var i=0; i<markers.length; i++){
+                        flightPlanCoordinates[i] = markers[i].getPosition();
+                    }
+
+                    alert(flightPlanCoordinates);
+
+                    const flightPath = new google.maps.Polyline({
+                        path: flightPlanCoordinates,
+                        geodesic: true,
+                        strokeColor: "#FF0000",
+                        strokeOpacity: 1.0,
+                        strokeWeight: 2,
+                    });
+
+                    flightPath.setMap(map);
+                    },
+                    () => {
+                    handleLocationError(true, infoWindow, map.getCenter());
+                    }
+                    );
+                } else {
+                // Browser doesn't support Geolocation
+                    handleLocationError(false, infoWindow, map.getCenter());
+                }
+            });
+        }
+
+        function handleLocationError(browserHasGeolocation, infoWindow, pos) {
+            infoWindow.setPosition(pos);
+            infoWindow.setContent(
+            browserHasGeolocation
+                ? "Error: The Geolocation service failed."
+                : "Error: Your browser doesn't support geolocation."
+            );
+            infoWindow.open(map);
+        }
+    </script>
+
+
+    <!-- Maps script --> 
+    <script type="text/javascript">
+    	let map;
+
+		function initMap() {
+		  map = new google.maps.Map(document.getElementById("map"), {
+		    zoom: 2,
+		    center: new google.maps.LatLng(2.8, -187.3),
+		    mapTypeId: "terrain",
+		  });
+		  // Create a <script> tag and set the USGS URL as the source.
+		  const script = document.createElement("script");
+		  // This example uses a local copy of the GeoJSON stored at
+		  // http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.geojsonp
+		  script.src =
+		    "https://developers.google.com/maps/documentation/javascript/examples/json/earthquake_GeoJSONP.js";
+		  document.getElementsByTagName("head")[0].appendChild(script);
+		}
+
+		// Loop through the results array and place a marker for each
+		// set of coordinates.
+		const eqfeed_callback = function (results) {
+		  for (let i = 0; i < results.features.length; i++) {
+		    const coords = results.features[i].geometry.coordinates;
+		    const latLng = new google.maps.LatLng(coords[1], coords[0]);
+		    new google.maps.Marker({
+		      position: latLng,
+		      map: map,
+		    });
+		  }
+		};
+    </script>
+	<!-- Async script executes immediately and must be after any DOM elements used in callback. -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA25rL320UU0T8pxaNG5bkuBWS2v2Eb0hg&callback=initMap&libraries=&v=weekly" async></script>
+
+    <!-- Geolocation script -->
+    <script>
+		var x = document.getElementById("gpsCoord");
+
+		function getLocation() {
+		  if (navigator.geolocation) {
+		    navigator.geolocation.getCurrentPosition(showPosition);
+		  } else { 
+		    x.innerHTML = "Geolocation is not supported by this browser.";
+		  }
+		}
+
+
+		getLocation()
+
+		var xCoord
+    	var yCoord 
+		function showPosition(position) {
+			xCoord = position.coords.latitude;
+	    	yCoord = position.coords.longitude;
+			x.innerHTML = "Latitude: " + xCoord + 
+			  "<br>Longitude: " + yCoord;
+			
+		};
+
+	
+
+
+		//JS - Chat and sockets
+  
+
+    	
+
+        const roomName = JSON.parse(document.getElementById('room-name').textContent);
+
+        const chatSocket = new WebSocket(
+            'ws://'
+            + window.location.host
+            + '/ws/chat/'
+            + roomName
+            + '/'
+        );
+
+        var socketObject = document.getElementById("socketInfo");
+        var channelName_ID = document.getElementById("channelNameID");
+        
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+
+            if(data.socketID){
+            		document.querySelector('#chat-log').value += ('message from - ' + data.socketID + '\n' );
+            		socketObject.textContent = data.socketID;
+            		channelName_ID.textContent = data.userID;
+            		
+            	}
+            
+            document.querySelector('#chat-log').value += (data.message + '\n');
+        };
+
+        chatSocket.onclose = function(e) {
+            console.error('Chat socket closed unexpectedly');            
+        };
+
+        document.querySelector('#chat-message-input').focus();
+        
+        document.querySelector('#chat-message-input').onkeyup = function(e) {
+            if (e.keyCode === 13) {  // enter, return
+                document.querySelector('#chat-message-submit').click();
+            }
+        };
+
+        document.querySelector('#chat-message-submit').onclick = function(e) {
+            const messageInputDom = document.querySelector('#chat-message-input');
+            const message = messageInputDom.value;
+            chatSocket.send(JSON.stringify({
+                'message': message,
+                'xCoord': xCoord,
+                'yCoord': yCoord,
+            }));
+            messageInputDom.value = '';
+        };
+    </script>	
+
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w==" crossorigin="anonymous" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js" integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0" crossorigin="anonymous"></script>
+
+</body>
+</html>
